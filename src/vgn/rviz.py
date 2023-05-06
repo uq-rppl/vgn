@@ -14,6 +14,7 @@ class Visualizer:
         self.create_scene_cloud_publisher()
         self.create_map_cloud_publisher()
         self.create_quality_publisher()
+        self.create_target_locations_publisher()
 
     def create_marker_publisher(self, topic="visualization_marker_array"):
         self.marker_pub = rospy.Publisher(topic, MarkerArray, queue_size=1)
@@ -26,11 +27,19 @@ class Visualizer:
 
     def create_quality_publisher(self, topic="quality"):
         self.quality_pub = rospy.Publisher(topic, PointCloud2, queue_size=1)
+        
+    def create_target_locations_publisher(self, topic="target_locations"):
+        self.target_locations_pub = rospy.Publisher(topic, PointCloud2, queue_size=1)
 
     def clear(self):
         self.clear_markers()
         self.clear_clouds()
         self.clear_quality()
+        self.clear_targets()
+
+    def clear_targets(self):
+        msg = to_cloud_msg(self.base_frame, np.array([]))
+        self.target_locations_pub.publish(msg)
 
     def clear_markers(self):
         self.draw([Marker(action=Marker.DELETEALL)])
@@ -55,6 +64,11 @@ class Visualizer:
         lines = box_lines(np.full(3, 0), np.full(3, size))
         msg = create_line_list_marker(frame, pose, scale, color, lines, ns="roi")
         self.draw([msg])
+
+    def target_locations(self, frame, points):
+        msg = to_cloud_msg(frame, points)
+        self.target_locations_pub.publish(msg)
+
 
     def scene_cloud(self, frame, points):
         msg = to_cloud_msg(frame, points)
